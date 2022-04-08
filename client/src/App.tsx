@@ -21,7 +21,8 @@ function App() {
 function AppWithUser() {
   const { user } = useContext(UserContext);
 
-  return user ? <Dashboard /> : <Login />;
+  //return user ? <Dashboard /> : <Login />;
+  return user ? <Dashboard /> : <Dashboard />;
 }
 
 export default App;

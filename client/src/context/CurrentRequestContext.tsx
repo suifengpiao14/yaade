@@ -30,6 +30,7 @@ const defaultRequest: CurrentRequest = {
       },
     ],
     body: '',
+    preRequest: '',
   },
   isLoading: false,
   collectionId: -1,

@@ -1,5 +1,6 @@
 import { Box, Input, Select, useDisclosure, useToast } from '@chakra-ui/react';
 import { IconButton, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import cryptoJsObj from 'crypto-js';
 import {
   Dispatch,
   MutableRefObject,
@@ -18,6 +19,7 @@ import { appendHttpIfNoProtocol, errorToast, successToast } from '../../utils';
 import { useKeyPress } from '../../utils/useKeyPress';
 import BasicModal from '../basicModal';
 import BodyEditor from '../bodyEditor';
+import JSEditor from '../jsEditor';
 import KVEditor from '../kvEditor';
 import UriBar from '../uriBar';
 import styles from './RequestPanel.module.css';
@@ -31,6 +33,19 @@ const defaultParam = {
   key: '',
   value: '',
 };
+
+function runPreRequest(options) {
+  var Base64 = BASE64.encoder,
+    CryptoJS = cryptoJsObj;
+
+  try {
+    if (code) {
+      eval(code);
+    }
+  } catch (err) {
+    console.log('Before Error:' + err);
+  }
+}
 
 function shouldAppendNewRow(params: Array<KVRow>): boolean {
   if (params.length === 0) return true;
@@ -164,6 +179,15 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
       },
     });
   };
+  const setPreRequest = (preRequest: string) => {
+    changeCurrentRequest({
+      ...currentRequest,
+      data: {
+        ...currentRequest.data,
+        preRequest,
+      },
+    });
+  };
 
   async function handleSaveNewRequestClick() {
     try {
@@ -207,10 +231,10 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
   }
 
   function handleSendButtonClick() {
-    if (!isExtInitialized.current) {
-      openExtModal();
-      return;
-    }
+    // if (!isExtInitialized.current) {
+    //   openExtModal();
+    //   return;
+    // }
     if (currentRequest.isLoading) {
       setCurrentRequest({ ...currentRequest, isLoading: false });
       return;
@@ -226,6 +250,9 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
     const options: any = { headers, method: currentRequest.data.method };
     if (currentRequest.data.body) {
       options['body'] = currentRequest.data.body;
+    }
+    if (currentRequest.data.preRequest) {
+      options['preRequest'] = currentRequest.data.preRequest;
     }
 
     setCurrentRequest({ ...currentRequest, isLoading: true });
@@ -275,6 +302,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
           <Tab>Parameters</Tab>
           <Tab>Headers</Tab>
           <Tab>Body</Tab>
+          <Tab>Pre-request</Tab>
         </TabList>
         <TabPanels overflowY="auto" sx={{ scrollbarGutter: 'stable' }} h="100%">
           <TabPanel>
@@ -285,6 +313,12 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
           </TabPanel>
           <TabPanel h="100%">
             <BodyEditor content={currentRequest.data.body} setContent={setBody} />
+          </TabPanel>
+          <TabPanel h="100%">
+            <JSEditor
+              content={currentRequest.data.preRequest}
+              setContent={setPreRequest}
+            />
           </TabPanel>
         </TabPanels>
       </Tabs>
