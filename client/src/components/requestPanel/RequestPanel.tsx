@@ -23,6 +23,8 @@ import JSEditor from '../jsEditor';
 import KVEditor from '../kvEditor';
 import UriBar from '../uriBar';
 import styles from './RequestPanel.module.css';
+import axios  from 'axios';
+//import Base64Obj from "../../utils/base64"
 
 type NewReqFormState = {
   collectionId: number;
@@ -34,10 +36,11 @@ const defaultParam = {
   value: '',
 };
 
-function runPreRequest(options) {
-  var Base64 = BASE64.encoder,
-    CryptoJS = cryptoJsObj;
 
+
+function runPreRequest(code,options) {
+  //var Base64 = BASE64.encoder;
+  var   CryptoJS = cryptoJsObj;
   try {
     if (code) {
       eval(code);
@@ -189,6 +192,17 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
     });
   };
 
+  const variables = currentRequest.data?.variables || [{ key: '', value: '' }];
+
+  const setVariables = (variables:KVRow[])=>{
+    changeCurrentRequest({
+      ...currentRequest,
+      data: {
+        ...currentRequest.data,
+        variables,
+      },
+    });
+  }
   async function handleSaveNewRequestClick() {
     try {
       const body = {
@@ -251,20 +265,20 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
     if (currentRequest.data.body) {
       options['body'] = currentRequest.data.body;
     }
-    if (currentRequest.data.preRequest) {
-      options['preRequest'] = currentRequest.data.preRequest;
+    if (currentRequest.data.params.length>0){
+      options['params'] = currentRequest.data.params;
     }
 
-    setCurrentRequest({ ...currentRequest, isLoading: true });
+    const code =currentRequest.data.preRequest;
 
-    window.postMessage(
-      {
-        url,
-        type: 'send-request',
-        options: options,
-      },
-      '*',
-    );
+    setCurrentRequest({ ...currentRequest, isLoading: true });
+    runPreRequest(code,options)
+    const httpOptions={
+      headers: {...options.headers}
+    }
+    axios.post(url,options.body,httpOptions).then(res=> {
+      currentRequest.data.response=res;// 返回数据后，触发状态更新
+    })
   }
 
   return (
@@ -303,6 +317,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
           <Tab>Headers</Tab>
           <Tab>Body</Tab>
           <Tab>Pre-request</Tab>
+          <Tab>Variables</Tab>
         </TabList>
         <TabPanels overflowY="auto" sx={{ scrollbarGutter: 'stable' }} h="100%">
           <TabPanel>
@@ -319,6 +334,9 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
               content={currentRequest.data.preRequest}
               setContent={setPreRequest}
             />
+          </TabPanel>
+          <TabPanel h="100%">
+          <KVEditor name="variables" kvs={variables} setKvs={setVariables} />
           </TabPanel>
         </TabPanels>
       </Tabs>
