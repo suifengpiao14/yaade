@@ -9,9 +9,8 @@ import {
 } from '@chakra-ui/react';
 import { FormEvent, useContext } from 'react';
 import { useEffect, useState } from 'react';
-
 import { UserContext } from '../../context';
-import User from '../../model/User';
+import {apiLogin,apiGetUser} from "../../service/user";
 import { errorToast, successToast } from '../../utils';
 import styles from './Login.module.css';
 
@@ -35,12 +34,7 @@ function Login() {
     async function tryAutoLogin() {
       try {
         setState((state) => ({ ...state, loading: true }));
-
-        const response = await fetch('/api/user');
-        if (response.status !== 200) throw new Error();
-
-        const user = (await response.json()) as User;
-
+        const user = await apiGetUser();
         setUser(user);
         setState((state) => ({ ...state, loading: false }));
       } catch (e) {
@@ -56,26 +50,13 @@ function Login() {
     try {
       setState({ ...state, loading: true });
 
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: state.username,
-          password: state.password,
-        }),
-      });
-      if (response.status !== 200) throw new Error();
-
-      const usr = await response.json();
-
+      const usr = await apiLogin(state.username,state.password);
       setUser(usr);
       setState({ ...state, loading: false });
       successToast('You are successfully logged in.', toast);
-    } catch (e) {
+    } catch (err:any) {
       setState({ ...state, loading: false });
-      errorToast('Login was not successful.', toast);
+      errorToast(err?.message, toast);
     }
   }
 
