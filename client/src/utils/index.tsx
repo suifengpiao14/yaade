@@ -1,7 +1,6 @@
 import beautify from 'beautify';
 
-
-import parseResponseEvent from './parseResponseEvent';
+import parseResponseEvent, { formatResponse } from './parseResponseEvent';
 
 function cn(styles: any, name: string, variants: Array<string>): string {
   const variantCns = variants.map((v) => styles[`${name}--${v}`]).join(' ');
@@ -78,6 +77,7 @@ export {
   beautifyBody,
   cn,
   errorToast,
+  formatResponse,
   getMethodColor,
   parseResponseEvent,
   successToast,

@@ -32,3 +32,23 @@ export default function parseResponseEvent(event: any): Response {
     size,
   };
 }
+
+export function formatResponse(response: Response): Response {
+  const headers: Array<KVRow> = response.headers;
+  const contentType = getContentType(headers);
+  let body = response.body;
+  try {
+    body = beautifyBody(body, contentType);
+  } catch (e) {
+    console.log(e);
+  }
+  const size = getSize(headers);
+
+  return {
+    headers,
+    body,
+    status: response.status,
+    time: response.time,
+    size,
+  };
+}

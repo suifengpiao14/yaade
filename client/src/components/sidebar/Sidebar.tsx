@@ -18,6 +18,7 @@ import { Dispatch, SetStateAction, useContext, useRef, useState } from 'react';
 import { CollectionsContext } from '../../context';
 import Collection from '../../model/Collection';
 import Request from '../../model/Request';
+import { apiImportOpenApi } from '../../service/collection';
 import { cn, errorToast, successToast } from '../../utils';
 import BasicModal from '../basicModal';
 import CollectionView from '../collectionView';
@@ -64,14 +65,7 @@ function Sidebar() {
       if (state.openApiFile) {
         const data = new FormData();
         data.append('File', state.openApiFile, 'openapi.yaml');
-
-        response = await fetch(
-          `/api/collection/importOpenApi?basePath=${state.basePath}`,
-          {
-            method: 'POST',
-            body: data,
-          },
-        );
+        response = await apiImportOpenApi(state.basePath, data);
       } else {
         response = await fetch('/api/collection', {
           method: 'POST',

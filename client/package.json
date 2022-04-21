@@ -19,7 +19,6 @@
     "@typescript-eslint/parser": "^5.13.0",
     "@uiw/react-codemirror": "^4.5.1",
     "allotment": "^1.10.0",
-    "axios": "^0.26.1",
     "beautify": "^0.0.8",
     "codemirror": "^5.65.2",
     "crypto-js": "^4.1.1",

@@ -11,11 +11,19 @@ import {
 } from 'react';
 import { VscSave } from 'react-icons/vsc';
 
-import { CollectionsContext, CurrentRequestContext } from '../../context';
+import { CollectionsContext, CurrentRequestContext, UserContext } from '../../context';
 import { parseRequest } from '../../context/CurrentRequestContext';
+import CurrentRequest from '../../model/CurrentRequest';
 import KVRow from '../../model/KVRow';
 import Request from '../../model/Request';
-import { appendHttpIfNoProtocol, errorToast, successToast } from '../../utils';
+import ModelResponse from '../../model/Response';
+import { apiRequestUpdate } from '../../service/request';
+import {
+  appendHttpIfNoProtocol,
+  errorToast,
+  formatResponse,
+  successToast,
+} from '../../utils';
 import { useKeyPress } from '../../utils/useKeyPress';
 import BasicModal from '../basicModal';
 import BodyEditor from '../bodyEditor';
@@ -23,7 +31,6 @@ import JSEditor from '../jsEditor';
 import KVEditor from '../kvEditor';
 import UriBar from '../uriBar';
 import styles from './RequestPanel.module.css';
-import axios  from 'axios';
 //import Base64Obj from "../../utils/base64"
 
 type NewReqFormState = {
@@ -36,11 +43,9 @@ const defaultParam = {
   value: '',
 };
 
-
-
-function runPreRequest(code,options) {
+function runPreRequest(code, options) {
   //var Base64 = BASE64.encoder;
-  var   CryptoJS = cryptoJsObj;
+  var CryptoJS = cryptoJsObj;
   try {
     if (code) {
       eval(code);
@@ -82,6 +87,7 @@ type RequestPanelProps = {
 
 function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
   const { collections, writeRequestToCollections } = useContext(CollectionsContext);
+  const { user } = useContext(UserContext);
   const {
     currentRequest,
     changeCurrentRequest,
@@ -194,7 +200,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
 
   const variables = currentRequest.data?.variables || [{ key: '', value: '' }];
 
-  const setVariables = (variables:KVRow[])=>{
+  const setVariables = (variables: KVRow[]) => {
     changeCurrentRequest({
       ...currentRequest,
       data: {
@@ -202,7 +208,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
         variables,
       },
     });
-  }
+  };
   async function handleSaveNewRequestClick() {
     try {
       const body = {
@@ -244,7 +250,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
     }
   }
 
-  function handleSendButtonClick() {
+  async function handleSendButtonClick() {
     // if (!isExtInitialized.current) {
     //   openExtModal();
     //   return;
@@ -265,21 +271,89 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
     if (currentRequest.data.body) {
       options['body'] = currentRequest.data.body;
     }
-    if (currentRequest.data.params.length>0){
+    if (currentRequest.data.params.length > 0) {
       options['params'] = currentRequest.data.params;
     }
 
-    const code =currentRequest.data.preRequest;
+    const code = currentRequest.data.preRequest;
 
     setCurrentRequest({ ...currentRequest, isLoading: true });
-    runPreRequest(code,options)
-    const httpOptions={
-      headers: {...options.headers}
+    runPreRequest(code, options);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: options.headers,
+        body: JSON.stringify(options.body),
+      });
+      const body = await res.text();
+      const modelResponse = httpResponse2Response(body, res); // 返回数据后，触发状态更新
+      handleResponse(modelResponse, '');
+    } catch (err: any) {
+      const res: ModelResponse = {
+        status: 500,
+        body: '',
+        headers: [],
+        time: 1,
+        size: 0,
+      };
+      handleResponse(res, err.message);
     }
-    axios.post(url,options.body,httpOptions).then(res=> {
-      currentRequest.data.response=res;// 返回数据后，触发状态更新
-    })
   }
+
+  function httpResponse2Response(body: string, httpResponse: Response): ModelResponse {
+    const headers = [...httpResponse.headers].map((el) => ({
+      key: el[0],
+      value: el[1],
+    }));
+
+    const res: ModelResponse = {
+      status: httpResponse.status,
+      body,
+      headers,
+      time: 1,
+      size: 0,
+    };
+    return res;
+  }
+
+  const handleResponse = async (response: ModelResponse, err: string) => {
+    if (err) {
+      setCurrentRequest((request: CurrentRequest) => ({
+        ...request,
+        isLoading: false,
+      }));
+      errorToast(err, toast);
+      return;
+    }
+
+    const modelResponse = formatResponse(response);
+
+    const newRequest = {
+      ...currentRequest,
+      data: {
+        ...currentRequest.data,
+        response: modelResponse,
+      },
+      isLoading: false,
+    };
+
+    if (currentRequest.id !== -1 && user?.data.settings.saveOnSend) {
+      try {
+        const response = await apiRequestUpdate(newRequest);
+        if (response.status !== 200) {
+          throw new Error();
+        }
+      } catch (e) {
+        errorToast('Could not retrieve collections', e);
+      }
+
+      const savedRequest = { ...newRequest, changed: false };
+      writeRequestToCollections(savedRequest);
+      setCurrentRequest(savedRequest);
+    } else {
+      setCurrentRequest(newRequest);
+    }
+  };
 
   return (
     <Box className={styles.box} bg="panelBg" h="100%">
@@ -336,7 +410,7 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
             />
           </TabPanel>
           <TabPanel h="100%">
-          <KVEditor name="variables" kvs={variables} setKvs={setVariables} />
+            <KVEditor name="variables" kvs={variables} setKvs={setVariables} />
           </TabPanel>
         </TabPanels>
       </Tabs>

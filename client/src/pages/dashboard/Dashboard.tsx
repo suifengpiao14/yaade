@@ -23,6 +23,8 @@ import { CurrentRequestContext, UserContext } from '../../context';
 import { CollectionsContext } from '../../context/CollectionsContext';
 import CurrentRequest from '../../model/CurrentRequest';
 import Request from '../../model/Request';
+import { apiCollection } from '../../service/collection';
+import { apiRequestUpdate } from '../../service/request';
 import { errorToast, parseResponseEvent } from '../../utils';
 import styles from './Dashboard.module.css';
 
@@ -42,8 +44,7 @@ function Dashboard() {
 
   const getCollections = useCallback(async () => {
     try {
-      const response = await fetch('/api/collection');
-      const collections = await response.json();
+      const collections = await apiCollection();
       setCollections(collections);
     } catch (e) {
       errorToast('Could not retrieve collections', toast);
@@ -62,57 +63,6 @@ function Dashboard() {
     }, 2000);
     getCollections();
   }, [getCollections]);
-
-  const handlePongMessage = (event: MessageEvent<any>) => {
-    if (event.data.type === 'pong') {
-      console.log('Extension connected');
-      setIsExtInitialized(true);
-      onClose();
-    }
-  };
-
-  const handleResponseMessage = async (event: MessageEvent<any>) => {
-    if (event.data.type === 'receive-response') {
-      if (event.data.response.err) {
-        setCurrentRequest((request: CurrentRequest) => ({
-          ...request,
-          isLoading: false,
-        }));
-        errorToast(event.data.response.err, toast);
-        return;
-      }
-
-      const response = parseResponseEvent(event);
-
-      const newRequest = {
-        ...currentRequest,
-        data: {
-          ...currentRequest.data,
-          response: response,
-        },
-        isLoading: false,
-      };
-
-      if (currentRequest.id !== -1 && user?.data.settings.saveOnSend) {
-        const response = await fetch('/api/request', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newRequest),
-        });
-        if (response.status !== 200) throw new Error();
-        const savedRequest = { ...newRequest, changed: false };
-        writeRequestToCollections(savedRequest);
-        setCurrentRequest(savedRequest);
-      } else {
-        setCurrentRequest(newRequest);
-      }
-    }
-  };
-
-  useEventListener('message', handlePongMessage);
-  useEventListener('message', handleResponseMessage);
 
   return (
     <div className={styles.parent}>

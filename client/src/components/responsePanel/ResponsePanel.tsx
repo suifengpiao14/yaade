@@ -52,7 +52,6 @@ function ResponsePanel() {
     onCopy();
     successToast('Copied to clipboard', toast);
   }
-
   const contentType = getContentType(response?.headers ?? []);
 
   const extensions = getExtensions(contentType);

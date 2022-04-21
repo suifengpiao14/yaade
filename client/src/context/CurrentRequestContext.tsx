@@ -8,6 +8,7 @@ import {
 
 import CurrentRequest from '../model/CurrentRequest';
 import Request from '../model/Request';
+import { apiRequestAdd, apiRequestUpdate } from '../service/request';
 
 const defaultRequest: CurrentRequest = {
   id: -1,
@@ -31,6 +32,12 @@ const defaultRequest: CurrentRequest = {
     ],
     body: '',
     preRequest: '',
+    variables: [
+      {
+        key: '',
+        value: '',
+      },
+    ],
   },
   isLoading: false,
   collectionId: -1,
@@ -75,25 +82,12 @@ const CurrentRequestProvider: FunctionComponent = ({ children }) => {
     });
   }
 
-  async function _sendSaveRequest(method: string, body: any): Promise<Response> {
-    const response = await fetch('/api/request', {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    if (response.status !== 200) throw new Error();
-    return response;
-  }
-
   async function saveRequest(): Promise<void> {
-    await _sendSaveRequest('PUT', currentRequest);
+    await apiRequestUpdate(currentRequest);
   }
 
-  async function saveNewRequest(body: any): Promise<Request> {
-    const response = await _sendSaveRequest('POST', body);
-    return (await response.json()) as Request;
+  async function saveNewRequest(request: Request): Promise<Request> {
+    return await apiRequestAdd(request);
   }
 
   return (

@@ -17,6 +17,7 @@ import { VscEllipsis } from 'react-icons/vsc';
 import { CollectionsContext, CurrentRequestContext, UserContext } from '../../context';
 import { defaultRequest, parseRequest } from '../../context/CurrentRequestContext';
 import Request from '../../model/Request';
+import { apiRequestUpdate } from '../../service/request';
 import { errorToast, successToast } from '../../utils';
 import { cn, getMethodColor } from '../../utils';
 import BasicModal from '../basicModal';
@@ -86,20 +87,17 @@ const CollectionRequest: FunctionComponent<CollectionRequestProps> = ({ request 
 
   async function handleRenameRequestClick() {
     try {
-      const response = await fetch('/api/request', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const newRequest = {
+        ...request,
+        data: {
+          ...request.data,
+          name: state.name,
         },
-        body: JSON.stringify({
-          ...request,
-          data: {
-            ...request.data,
-            name: state.name,
-          },
-        }),
-      });
-      if (response.status !== 200) throw new Error();
+      };
+      const response = await apiRequestUpdate(newRequest);
+      if (response.status !== 200) {
+        throw new Error();
+      }
 
       const renamedRequest = {
         ...request,

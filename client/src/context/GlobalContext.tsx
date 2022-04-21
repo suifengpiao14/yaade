@@ -6,20 +6,20 @@ import {
   useState,
 } from 'react';
 
-import Global from '../model/Global';
 import Collection from '../model/Collection';
+import Global from '../model/Global';
 
 const defaultGlobal: Global = {
   type: 'REST',
   version: '1.0.0',
   data: {
-    variables:[
+    variables: [
       {
         key: '',
         value: '',
       },
     ],
-    proxy:'', 
+    proxy: '',
   },
   isLoading: false,
   collectionId: -1,
@@ -30,7 +30,7 @@ function parseGlobal(Collection: Collection): Global {
   return {
     collectionId: Collection.id,
     type: 'REST',
-    version: "1.0.0",
+    version: '1.0.0',
     data: Collection.data?.global,
     isLoading: false,
     changed: false,
@@ -77,7 +77,6 @@ const GlobalProvider: FunctionComponent = ({ children }) => {
     await _sendSaveGlobal('PUT', global);
   }
 
-
   return (
     <GlobalContext.Provider
       value={{
@@ -92,6 +91,6 @@ const GlobalProvider: FunctionComponent = ({ children }) => {
   );
 };
 
-export { GlobalContext, defaultGlobal ,parseGlobal};
+export { defaultGlobal, GlobalContext, parseGlobal };
 
 export default GlobalProvider;
