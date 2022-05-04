@@ -21,20 +21,23 @@ export async function apiRequestAdd(request: Request): Promise<Request> {
   if (response.status !== 200) {
     throw new Error();
   }
-  const req = (await response.json()) as Request;
-  return req;
+  const res = (await response.json());
+  request.id =res.id;
+  return request;
 }
-export async function apiRequestUpdate(request: Request): Promise<Response> {
+export async function apiRequestUpdate(data: any): Promise<Response> {
   const url = `${host}/api/request/update`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(data),
   });
   if (response.status !== 200) {
     throw new Error();
   }
+  const body = await response.json()
+  console.log("response body:",body)
   return response;
 }

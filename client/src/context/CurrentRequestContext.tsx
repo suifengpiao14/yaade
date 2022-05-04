@@ -18,6 +18,7 @@ const defaultRequest: CurrentRequest = {
     name: '',
     uri: '',
     method: 'GET',
+    server:"",
     params: [
       {
         key: '',

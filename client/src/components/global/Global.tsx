@@ -87,25 +87,43 @@ function Global() {
     const proxy = e.target.value;
     setGlobal({
       ...global,
-      proxy,
+      data:{
+        ...global.data,
+        proxy
+      }
     });
   };
 
   
   function getVariables():KVRow[]{
-    return global?.variables||[{key:"",value:""}]
+    return global.data.variables
   }
 
-  const proxy= global?.proxy ||""
+  const proxy= global.data.proxy ||""
 
   function setVariables(variables:KVRow[]){
     changeGlobal({
       ...global,
-      variables,
+      data:{
+        ...global.data,
+        variables
+      }
+      
     });
   }
+  function getServers():KVRow[]{
+    return global.data.servers
+  }
 
-
+  function setServers(servers:KVRow[]){
+    changeGlobal({
+      ...global,
+      data:{
+        ...global.data,
+        servers
+      }
+    });
+  }
 
   const selected = {
     bg: colorMode === 'light' ? 'gray.200' : 'gray.800',
@@ -121,8 +139,11 @@ function Global() {
             <Tab sx={sx} _selected={selected} tabIndex={-1}>
               Variable
             </Tab>
-            <Tab sx={sx} _selected={selected} tabIndex={-1}>
+            <Tab sx={sx} _selected={selected} >
               Proxy
+            </Tab>
+            <Tab sx={sx} _selected={selected}>
+              Servers
             </Tab>
           </TabList>
         </div>
@@ -136,7 +157,6 @@ function Global() {
               <HStack mb="2">
               <KVEditor name="variables" kvs={getVariables()}  setKvs={setVariables}/>
               </HStack>
-            
             </SettingsTab>
           </TabPanel>
           <TabPanel>
@@ -146,6 +166,16 @@ function Global() {
               </Heading>
               <HStack mb="2">
               <Input variant='outline' placeholder='Proxy' value={proxy} onChange={onChangeProxy} />
+              </HStack>
+            </SettingsTab>
+          </TabPanel>
+          <TabPanel>
+          <SettingsTab name="servers">
+          <Heading as="h4" size="md" mb="4" mt="4">
+             Servers
+          </Heading>
+              <HStack mb="2">
+              <KVEditor name="servers" kvs={getServers()}  setKvs={setServers}/>
               </HStack>
             </SettingsTab>
           </TabPanel>

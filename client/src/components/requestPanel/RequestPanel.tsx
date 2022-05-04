@@ -1,5 +1,5 @@
-import { Box, Input, Select, useDisclosure, useToast } from '@chakra-ui/react';
-import { IconButton, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Box, Input, Select, useDisclosure, useToast, Radio, RadioGroup } from '@chakra-ui/react';
+import { IconButton, Tab, TabList, TabPanel, TabPanels, Tabs,Stack } from '@chakra-ui/react';
 import cryptoJsObj from 'crypto-js';
 import {
   Dispatch,
@@ -8,14 +8,16 @@ import {
   useContext,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 import { VscSave } from 'react-icons/vsc';
 
-import { CollectionsContext, CurrentRequestContext, UserContext } from '../../context';
+import { CollectionsContext, CurrentRequestContext, UserContext,GlobalContext } from '../../context';
 import { parseRequest } from '../../context/CurrentRequestContext';
 import CurrentRequest from '../../model/CurrentRequest';
 import KVRow from '../../model/KVRow';
 import Request from '../../model/Request';
+import Global from '../../model/Global';
 import ModelResponse from '../../model/Response';
 import { apiRequestUpdate } from '../../service/request';
 import {
@@ -43,7 +45,7 @@ const defaultParam = {
   value: '',
 };
 
-function runPreRequest(code, options) {
+function runPreRequest(code:string, options:any) {
   //var Base64 = BASE64.encoder;
   var CryptoJS = cryptoJsObj;
   try {
@@ -80,12 +82,9 @@ function getParamsFromUri(uri: string): Array<KVRow> {
   }
 }
 
-type RequestPanelProps = {
-  isExtInitialized: MutableRefObject<boolean>;
-  openExtModal: () => void;
-};
 
-function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
+
+function RequestPanel() {
   const { collections, writeRequestToCollections } = useContext(CollectionsContext);
   const { user } = useContext(UserContext);
   const {
@@ -143,6 +142,8 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
       },
     });
   };
+  const { global } = useContext(GlobalContext);
+  
 
   function setUriFromParams(params: Array<KVRow>) {
     try {
@@ -209,6 +210,18 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
       },
     });
   };
+
+  const setServer=(server: string)=>{
+    changeCurrentRequest({
+      ...currentRequest,
+      data:{
+        ...currentRequest.data,
+        server: server
+      }
+    })
+  }
+
+
   async function handleSaveNewRequestClick() {
     try {
       const body = {
@@ -251,15 +264,11 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
   }
 
   async function handleSendButtonClick() {
-    // if (!isExtInitialized.current) {
-    //   openExtModal();
-    //   return;
-    // }
     if (currentRequest.isLoading) {
       setCurrentRequest({ ...currentRequest, isLoading: false });
       return;
     }
-    const url = appendHttpIfNoProtocol(currentRequest.data.uri);
+    let url = appendHttpIfNoProtocol(currentRequest.data.uri);
 
     const headers: Record<string, string> = {};
     currentRequest.data.headers.forEach(({ key, value }: KVRow) => {
@@ -267,18 +276,42 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
       headers[key] = value;
     });
 
-    const options: any = { headers, method: currentRequest.data.method };
+    interface requestOptions{
+      headers:Record<string,string>;
+      method:string;
+      body:string;
+      params:Array<KVRow>;
+    }
+
+    const options: requestOptions = { headers, method: currentRequest.data.method,body:"",params:[] };
     if (currentRequest.data.body) {
-      options['body'] = currentRequest.data.body;
+      options.body = currentRequest.data.body;
     }
     if (currentRequest.data.params.length > 0) {
-      options['params'] = currentRequest.data.params;
+      options.params =  currentRequest.data.params;
     }
 
     const code = currentRequest.data.preRequest;
 
     setCurrentRequest({ ...currentRequest, isLoading: true });
     runPreRequest(code, options);
+   
+    const proxy=global.data.proxy
+    if (proxy) {
+     const  realProxyUrl = new URL(url)
+     const proxyUrl = new URL(proxy)
+      realProxyUrl.host = proxyUrl.host
+      realProxyUrl.hostname = proxyUrl.hostname
+      if (proxyUrl.protocol){
+        realProxyUrl.protocol = proxyUrl.protocol
+      }
+
+     options.headers["X-REAL-URL"]=url
+     url = realProxyUrl.toString()
+    }
+    if (currentRequest.data.server ){
+      options.headers["X-REAL-PROXY"]=currentRequest.data.server
+    }
     try {
       const res = await fetch(url, {
         method: 'POST',
@@ -358,6 +391,21 @@ function RequestPanel({ isExtInitialized, openExtModal }: RequestPanelProps) {
   return (
     <Box className={styles.box} bg="panelBg" h="100%">
       <div style={{ display: 'flex' }}>
+      <RadioGroup  onChange={setServer} marginBottom={3}>
+      <Stack spacing={4} direction='row'>
+        <GlobalContext.Consumer>
+          {(globalContext)=>{
+            const servers = globalContext.global.data.servers
+            return servers.filter(kv=>kv.key!=="").map((kv)=>{
+              return <Radio value={kv.value}>{kv.key}</Radio>
+            })
+          }}
+        </GlobalContext.Consumer>
+        
+      </Stack>
+    </RadioGroup>  
+    </div>
+    <div style={{ display: 'flex' }}>     
         <UriBar
           uri={currentRequest.data.uri}
           setUri={setUri}

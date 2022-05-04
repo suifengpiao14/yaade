@@ -33,13 +33,6 @@ function Dashboard() {
   const { currentRequest, setCurrentRequest, saveRequest } =
     useContext(CurrentRequestContext);
   const { user } = useContext(UserContext);
-  const [_isExtInitialized, _setIsExtInitialized] = useState<boolean>(false);
-  const isExtInitialized = useRef(_isExtInitialized);
-  const setIsExtInitialized = (result: boolean) => {
-    _setIsExtInitialized(result);
-    isExtInitialized.current = result;
-  };
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
   const getCollections = useCallback(async () => {
@@ -52,15 +45,6 @@ function Dashboard() {
   }, [toast, setCollections]);
 
   useEffect(() => {
-    if (isExtInitialized.current) return;
-    const periodic = setInterval(() => {
-      console.log('Checking extension');
-      if (isExtInitialized.current) {
-        clearInterval(periodic);
-      } else {
-        window.postMessage({ type: 'ping' }, '*');
-      }
-    }, 2000);
     getCollections();
   }, [getCollections]);
 
@@ -77,7 +61,7 @@ function Dashboard() {
           <div className={styles.main}>
             <Allotment vertical defaultSizes={[200, 100]} snap>
               <div className={styles.requestPanel}>
-                <RequestPanel isExtInitialized={isExtInitialized} openExtModal={onOpen} />
+                <RequestPanel  />
               </div>
               <div className={styles.responsePanel}>
                 <ResponsePanel />
@@ -86,24 +70,7 @@ function Dashboard() {
           </div>
         </Allotment>
       </div>
-      <Modal isOpen={isOpen} onClose={() => {}}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Failed to connect to extension</ModalHeader>
-          <ModalBody>
-            The extension could not be connected. Please install the extension and copy
-            the URL of this window into the host field of the extension. Then click retry.
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="green"
-              onClick={() => window.postMessage({ type: 'ping' }, '*')}
-            >
-              Retry
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      
     </div>
   );
 }

@@ -1,7 +1,15 @@
+interface UserDataSettings{
+  saveOnClose: boolean;
+  saveOnSend:boolean;
+
+}
+interface UserData {
+  settings: UserDataSettings;
+}
 interface User {
   id: number;
   username: String;
-  data: any;
+  data: UserData;
 }
 
 export default User;

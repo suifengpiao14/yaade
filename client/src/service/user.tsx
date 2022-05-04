@@ -31,3 +31,46 @@ export async function apiGetUser(): Promise<User> {
   const user = (await response.json()) as User;
   return user;
 }
+export async function apiLoginout(): Promise<void> {
+  const url = `${host}/api/logout`;
+  const response = await fetch(url,{
+    method:"POST"
+  });
+  if (response.status !== 200) {
+    throw new Error();
+  }
+  return ;
+}
+export async function apiChangeSetting(key: string,value:number | boolean | string): Promise<void> {
+  const url = `${host}/api/user/changeSetting`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      key,
+      value
+    }),
+  });
+  if (response.status !== 200) throw new Error();
+  return
+}
+
+export async function apiChangePassword(currentPassword: string,newPassword:string): Promise<void> {
+  const url = `${host}/api/user/changePassword`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      currentPassword,
+      newPassword
+    }),
+  });
+  if (response.status !== 200) throw new Error();
+  return
+}
+
+

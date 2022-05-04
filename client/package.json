@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@types/beautify": "^0.0.0",
+    "@types/crypto-js": "^4.1.1",
     "@types/react": "^17.0.33",
     "@types/react-dom": "^17.0.10",
     "@types/react-resizable": "^1.7.4",

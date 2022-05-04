@@ -9,17 +9,28 @@ import {
 import User from '../model/User';
 
 interface IUserContext {
-  user: User | undefined;
-  setUser: Dispatch<SetStateAction<User | undefined>>;
+  user: User;
+  setUser: Dispatch<SetStateAction<User>>;
+}
+
+const visitor:User ={
+  id:0,
+  username:'visitor',
+  data:{
+    settings:{
+      saveOnClose:false,
+      saveOnSend:false
+    }
+  }
 }
 
 const UserContext = createContext<IUserContext>({
-  user: undefined,
+  user: visitor,
   setUser: () => {},
 });
 
 const UserProvider: FunctionComponent = ({ children }) => {
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<User>(visitor);
 
   return (
     <UserContext.Provider
@@ -33,6 +44,6 @@ const UserProvider: FunctionComponent = ({ children }) => {
   );
 };
 
-export { UserContext };
+export { UserContext,visitor };
 
 export default UserProvider;

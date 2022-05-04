@@ -20,6 +20,10 @@ const defaultGlobal: Global = {
       },
     ],
     proxy: '',
+    servers:[{
+      key: '',
+      value: '',
+    },],
   },
   isLoading: false,
   collectionId: -1,
@@ -38,7 +42,7 @@ function parseGlobal(Collection: Collection): Global {
 }
 
 interface IGlobalContext {
-  global: any;
+  global: Global;
   setGlobal: Dispatch<SetStateAction<Global>>;
   saveGlobal: () => Promise<void>;
   changeGlobal: (global: Global) => void;
@@ -74,7 +78,7 @@ const GlobalProvider: FunctionComponent = ({ children }) => {
   }
 
   async function saveGlobal(): Promise<void> {
-    await _sendSaveGlobal('PUT', global);
+    await _sendSaveGlobal('POST', global);
   }
 
   return (

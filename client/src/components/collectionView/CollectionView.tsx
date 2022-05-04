@@ -14,7 +14,7 @@ import { useContext, useRef, useState } from 'react';
 import { VscEllipsis } from 'react-icons/vsc';
 
 import { CollectionsContext, CurrentRequestContext } from '../../context';
-import { parseRequest } from '../../context/CurrentRequestContext';
+import { defaultRequest,parseRequest } from '../../context/CurrentRequestContext';
 import Collection from '../../model/Collection';
 import Request from '../../model/Request';
 import { errorToast, successToast } from '../../utils';
@@ -22,6 +22,7 @@ import { cn } from '../../utils';
 import BasicModal from '../basicModal';
 import CollectionRequest from '../CollectionRequest/CollectionRequest';
 import styles from './CollectionView.module.css';
+import {apiRequestAdd} from "../../service/request";
 
 type CollectionProps = {
   collection: Collection;
@@ -56,20 +57,13 @@ function CollectionView({ collection }: CollectionProps) {
 
   async function handleCreateRequestClick() {
     try {
-      const response = await fetch('/api/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: state.newRequestName,
-          collectionId: collection.id,
-          type: 'REST',
-        }),
-      });
-
-      const newRequest = (await response.json()) as Request;
-
+      const req ={
+        ... defaultRequest,
+        collectionId: collection.id,
+      } 
+      req.data.name=state.newRequestName
+      
+      const newRequest = await apiRequestAdd(req)
       writeRequestToCollections(newRequest);
       setCurrentRequest(parseRequest(newRequest));
       onCloseClear();
