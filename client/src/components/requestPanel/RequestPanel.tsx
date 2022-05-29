@@ -199,9 +199,8 @@ function RequestPanel() {
     });
   };
 
-  const variables = currentRequest.data?.variables || [{ key: '', value: '' }];
-
-  const setVariables = (variables: KVRow[]) => {
+  const currentRequestVariables = currentRequest.data?.variables || [{ key: '', value: '' }];
+  const setVariables = (variables: Array<KVRow>) => {
     changeCurrentRequest({
       ...currentRequest,
       data: {
@@ -458,7 +457,7 @@ function RequestPanel() {
             />
           </TabPanel>
           <TabPanel h="100%">
-            <KVEditor name="variables" kvs={variables} setKvs={setVariables} />
+            <KVEditor name="variables" kvs={currentRequestVariables} setKvs={setVariables} />
           </TabPanel>
         </TabPanels>
       </Tabs>

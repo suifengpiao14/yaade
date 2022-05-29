@@ -96,6 +96,7 @@ function Global() {
 
   
   function getVariables():KVRow[]{
+    debugger
     return global.data.variables
   }
 

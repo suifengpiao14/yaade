@@ -81,7 +81,8 @@ const CollectionRequest: FunctionComponent<CollectionRequestProps> = ({ request 
       setState({ ...state, currentModal: 'save' });
       onOpen();
     } else {
-      setCurrentRequest(parseRequest(request));
+      const newRequest =parseRequest(request); 
+      setCurrentRequest(newRequest);
     }
   }
 

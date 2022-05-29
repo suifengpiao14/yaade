@@ -13,15 +13,15 @@ type KVEditorProps = {
 };
 
 function KVEditor({ name, kvs, setKvs, readOnly }: KVEditorProps) {
+
   const { colorMode } = useColorMode();
 
   if (kvs.length === 0) {
-    setKvs({
+    kvs=[{
       key: '',
       value: '',
-    });
+    }]
   }
-
   const onChangeRow = (i: number, param: string, e: any) => {
     const newKvs = [...kvs];
     const newRow = { ...newKvs[i] } as any;
@@ -43,6 +43,8 @@ function KVEditor({ name, kvs, setKvs, readOnly }: KVEditorProps) {
     newKvs.splice(i, 1);
     setKvs(newKvs);
   };
+
+
 
   return (
     <div className={styles.container}>
